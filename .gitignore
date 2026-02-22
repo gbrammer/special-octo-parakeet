@@ -208,3 +208,6 @@ __marimo__/
 
 # Server logs
 nohup.out
+
+# Query log
+queries.txt
