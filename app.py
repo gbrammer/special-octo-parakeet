@@ -1,10 +1,12 @@
+import csv
+import io
 import os
 from datetime import datetime, timezone
 
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
 
 load_dotenv()
 
@@ -47,10 +49,12 @@ def index():
     error = None
     query = ""
     email = ""
+    csv_output = False
 
     if request.method == "POST":
         email = request.form.get("email", "").strip()
         query = request.form.get("query", "").strip()
+        csv_output = request.form.get("csv_output") == "1"
         if "@" not in email or "." not in email.split("@")[-1]:
             error = "A valid email address is required."
         elif query:
@@ -87,6 +91,18 @@ def index():
                 nrows=len(rows),
             )
 
+            if csv_output and columns:
+                si = io.StringIO()
+                writer = csv.writer(si)
+                writer.writerow(columns)
+                writer.writerows(rows)
+                output = si.getvalue()
+                return Response(
+                    output,
+                    mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=query_results.csv"},
+                )
+
     parse_rows_and_columns(rows, columns)
 
     return render_template(
@@ -96,6 +112,7 @@ def index():
         columns=columns,
         rows=rows,
         error=error,
+        csv_output=csv_output,
     )
 
 
