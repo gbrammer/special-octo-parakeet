@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 import psycopg2
 import psycopg2.extras
@@ -25,16 +26,33 @@ def get_db_connection():
     )
 
 
+QUERIES_LOG = os.path.join(os.path.dirname(__file__), "queries.txt")
+
+
+def log_query(email, query):
+    """Append a log entry to queries.txt."""
+    timestamp = datetime.now(timezone.utc).isoformat()
+    safe_email = email.replace("\n", " ").replace("\r", " ")
+    safe_query = query.replace("\n", " ").replace("\r", " ")
+    with open(QUERIES_LOG, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] email={safe_email!r} query={safe_query!r}\n")
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     columns = []
     rows = []
     error = None
     query = ""
+    email = ""
 
     if request.method == "POST":
+        email = request.form.get("email", "").strip()
         query = request.form.get("query", "").strip()
-        if query:
+        if "@" not in email or "." not in email.split("@")[-1]:
+            error = "A valid email address is required."
+        elif query:
+            log_query(email, query)
             conn = None
             cursor = None
             try:
@@ -62,6 +80,7 @@ def index():
     return render_template(
         "index.html",
         query=query,
+        email=email,
         columns=columns,
         rows=rows,
         error=error,
