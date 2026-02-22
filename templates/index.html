@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PostgreSQL Query Tool</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.min.css" integrity="sha256-UHxQoziHKEjpMiNuKPRcu+lxkvfKCUvuJD8fE6al37Y=" crossorigin="anonymous">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -157,7 +158,7 @@
   <div class="card">
     <div class="meta">{{ rows|length }} row{{ 's' if rows|length != 1 else '' }} returned</div>
     <div class="table-wrapper">
-      <table>
+      <table id="results-table">
         <thead>
           <tr>
             {% for col in columns %}
@@ -182,5 +183,12 @@
     <span class="empty">Query executed successfully (no rows returned).</span>
   </div>
   {% endif %}
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="https://cdn.datatables.net/2.3.0/js/dataTables.min.js" integrity="sha256-BV4ITcanNWR/QQ0Yc38Rotd/+HNqQXyYSlLQR5azz0c=" crossorigin="anonymous"></script>
+  <script>
+    $(document).ready(function () {
+      $('#results-table').DataTable();
+    });
+  </script>
 </body>
 </html>
