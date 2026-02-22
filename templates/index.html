@@ -66,6 +66,20 @@
 
     button[type="submit"]:hover { background: #3b5be0; }
 
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 1.1rem;
+      height: 1.1rem;
+      cursor: pointer;
+    }
+
     .error {
       background: #fff3f3;
       border-left: 4px solid #e74c3c;
@@ -126,6 +140,10 @@
       <label for="query"><strong>SQL Query</strong></label><br>
       <textarea id="query" name="query" placeholder="SELECT * FROM my_table LIMIT 10;" autofocus>{{ query }}</textarea>
       <br>
+      <div class="toggle-row">
+        <input type="checkbox" id="csv_output" name="csv_output" value="1" {% if csv_output %}checked{% endif %}>
+        <label for="csv_output">Download results as CSV</label>
+      </div>
       <button type="submit">Run Query</button>
     </form>
   </div>
