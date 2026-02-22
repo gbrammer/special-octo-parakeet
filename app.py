@@ -29,13 +29,15 @@ def get_db_connection():
 QUERIES_LOG = os.path.join(os.path.dirname(__file__), "queries.txt")
 
 
-def log_query(email, query):
+def log_query(email, query, tag="start", remote_addr="0.0.0.0", nrows=0):
     """Append a log entry to queries.txt."""
     timestamp = datetime.now(timezone.utc).isoformat()
     safe_email = email.replace("\n", " ").replace("\r", " ")
     safe_query = query.replace("\n", " ").replace("\r", " ")
     with open(QUERIES_LOG, "a", encoding="utf-8") as f:
-        f.write(f"[{timestamp}] email={safe_email!r} query={safe_query!r}\n")
+        f.write(
+            f"[{timestamp}] email={safe_email!r} query={safe_query!r} remote_addr={remote_addr} tag={tag} nrows={nrows}\n"
+        )
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -52,7 +54,7 @@ def index():
         if "@" not in email or "." not in email.split("@")[-1]:
             error = "A valid email address is required."
         elif query:
-            log_query(email, query)
+            log_query(email, query, remote_addr=request.remote_addr, tag="send")
             conn = None
             cursor = None
             try:
@@ -77,6 +79,16 @@ def index():
                 if conn:
                     conn.close()
 
+            log_query(
+                email,
+                query,
+                remote_addr=request.remote_addr,
+                tag="complete",
+                nrows=len(rows),
+            )
+
+    parse_rows_and_columns(rows, columns)
+
     return render_template(
         "index.html",
         query=query,
@@ -85,6 +97,15 @@ def index():
         rows=rows,
         error=error,
     )
+
+
+def parse_rows_and_columns(rows, columns):
+    FORMATS = {"ra": ".6f", "dec": ".6f", "expstart": ".2f"}
+
+    for i, c in enumerate(columns):
+        if c.lower() in FORMATS:
+            for row in rows:
+                row[i] = ("{0:" + FORMATS[c] + "}").format(float(row[i]))
 
 
 if __name__ == "__main__":
